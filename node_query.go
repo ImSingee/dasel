@@ -118,6 +118,27 @@ func findNextAvailableIndex(n *Node, createIfNotExists bool) (reflect.Value, err
 	return nilValue(), nil
 }
 
+// findValueKeys finds the keys for the given node
+func findValueKeys(n *Node, createIfNotExists bool) (reflect.Value, error) {
+	if !isValid(n.Previous.Value) {
+		return nilValue(), &UnexpectedPreviousNilValue{Selector: n.Previous.Selector.Current}
+	}
+	value := unwrapValue(n.Previous.Value)
+
+	if value.Kind() == reflect.Map {
+		mapKeys := value.MapKeys()
+
+		keys := make([]string, len(mapKeys))
+		for i, key := range value.MapKeys() {
+			keys[i] = key.String()
+		}
+
+		return reflect.ValueOf(keys), nil
+	}
+
+	return nilValue(), &UnsupportedTypeForSelector{Selector: n.Selector, Value: value}
+}
+
 // processFindDynamicItem is used by findValueDynamic.
 func processFindDynamicItem(n *Node, object reflect.Value, key string) (bool, error) {
 	// Loop through each condition.
@@ -269,6 +290,8 @@ func findValue(n *Node, createIfNotExists bool) (reflect.Value, error) {
 		return findValueIndex(n, createIfNotExists)
 	case "NEXT_AVAILABLE_INDEX":
 		return findNextAvailableIndex(n, createIfNotExists)
+	case "KEYS":
+		return findValueKeys(n, createIfNotExists)
 	case "DYNAMIC":
 		return findValueDynamic(n, createIfNotExists)
 	case "LENGTH":

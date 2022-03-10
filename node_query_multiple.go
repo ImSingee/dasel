@@ -382,6 +382,31 @@ func findNodesSearch(selector Selector, previousNode *Node, createIfNotExists bo
 	return res, nil
 }
 
+// findNodesKeys returns a node for every key in the previous value list.
+func findNodesKeys(selector Selector, previousValue reflect.Value) ([]*Node, error) {
+	if !isValid(previousValue) {
+		return nil, &UnexpectedPreviousNilValue{Selector: selector.Raw}
+	}
+	value := unwrapValue(previousValue)
+
+	if value.Kind() == reflect.Map {
+		mapKeys := value.MapKeys()
+
+		keys := make([]string, len(mapKeys))
+		for i, key := range value.MapKeys() {
+			keys[i] = key.String()
+		}
+
+		node := &Node{
+			Value:    reflect.ValueOf(keys),
+			Selector: selector,
+		}
+		return []*Node{node}, nil
+	}
+
+	return nil, &UnsupportedTypeForSelector{Selector: selector, Value: value}
+}
+
 // findNodesAnyIndex returns a node for every value in the previous value list.
 func findNodesAnyIndex(selector Selector, previousValue reflect.Value) ([]*Node, error) {
 	if !isValid(previousValue) {
@@ -520,6 +545,8 @@ func initialiseEmptyValue(selector Selector, previousValue reflect.Value) reflec
 		return reflect.ValueOf(map[string]interface{}{})
 	case "INDEX", "NEXT_AVAILABLE_INDEX", "INDEX_ANY", "DYNAMIC":
 		return reflect.ValueOf([]interface{}{})
+	case "KEYS":
+		return reflect.ValueOf([]string{})
 	}
 	return previousValue
 }
@@ -540,6 +567,8 @@ func findNodes(selector Selector, previousNode *Node, createIfNotExists bool) ([
 		res, err = findNodesIndex(selector, previousNode.Value, createIfNotExists)
 	case "NEXT_AVAILABLE_INDEX":
 		res, err = findNextAvailableIndexNodes(selector, previousNode.Value, createIfNotExists)
+	case "KEYS":
+		res, err = findNodesKeys(selector, previousNode.Value)
 	case "INDEX_ANY":
 		res, err = findNodesAnyIndex(selector, previousNode.Value)
 	case "LENGTH":

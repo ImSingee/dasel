@@ -33,11 +33,13 @@ func ParseSelector(selector string) (Selector, error) {
 		sel, err = processParseSelectorDynamic(nextSel, sel)
 	case nextSel == "[]":
 		sel, err = processParseSelectorNextAvailableIndex(nextSel, sel)
-	case nextSel == "[*]":
+	case nextSel == "[:]" || nextSel == "[keys]":
+		sel, err = processParseSelectorKeys(nextSel, sel)
+	case nextSel == "[*]" || nextSel == "[vals]" || nextSel == "[values]":
 		sel, err = processParseSelectorIndexAny(nextSel, sel)
-	case nextSel == "[#]":
+	case nextSel == "[#]" || nextSel == "[len]" || nextSel == "[length]":
 		sel, err = processParseSelectorLength(nextSel, sel)
-	case nextSel == "[@]":
+	case nextSel == "[@]" || nextSel == "[type]":
 		sel, err = processParseSelectorType(nextSel, sel)
 	case strings.HasPrefix(nextSel, "[") && strings.HasSuffix(nextSel, "]"):
 		sel, err = processParseSelectorIndex(nextSel, sel)
@@ -157,6 +159,11 @@ func processParseSelectorSearch(selector string, sel Selector) (Selector, error)
 
 func processParseSelectorNextAvailableIndex(selector string, sel Selector) (Selector, error) {
 	sel.Type = "NEXT_AVAILABLE_INDEX"
+	return sel, nil
+}
+
+func processParseSelectorKeys(selector string, sel Selector) (Selector, error) {
+	sel.Type = "KEYS"
 	return sel, nil
 }
 
