@@ -3,6 +3,7 @@ package dasel
 import (
 	"fmt"
 	"reflect"
+	"sort"
 )
 
 // QueryMultiple uses the given selector to query the current node for every match
@@ -396,6 +397,8 @@ func findNodesKeys(selector Selector, previousValue reflect.Value) ([]*Node, err
 		for i, key := range value.MapKeys() {
 			keys[i] = key.String()
 		}
+
+		sort.Strings(keys)
 
 		node := &Node{
 			Value:    reflect.ValueOf(keys),

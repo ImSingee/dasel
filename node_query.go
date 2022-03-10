@@ -3,6 +3,7 @@ package dasel
 import (
 	"fmt"
 	"reflect"
+	"sort"
 )
 
 // Query uses the given selector to query the current node and return the result.
@@ -132,6 +133,8 @@ func findValueKeys(n *Node, createIfNotExists bool) (reflect.Value, error) {
 		for i, key := range value.MapKeys() {
 			keys[i] = key.String()
 		}
+
+		sort.Strings(keys)
 
 		return reflect.ValueOf(keys), nil
 	}
